@@ -1,50 +1,230 @@
-# Welcome to your Expo app 👋
+# Course Trading App - Redux Architecture
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A professional React Native trading education app built with Redux Toolkit for state management.
 
-## Get started
+## 🏗️ Architecture Overview
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+### Redux Store Structure
+```
+store/
+├── index.ts              # Main store configuration
+├── hooks.ts              # Typed Redux hooks
+└── slices/
+    ├── coursesSlice.ts   # Course management
+    ├── levelsSlice.ts    # Level state management
+    └── userSlice.ts      # User progress & stats
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🎯 Core Features
 
-## Learn more
+### 1. Course Management
+- **3 Course States**: Open, Locked, Completed
+- **Progressive Unlocking**: Next course unlocks after previous completion
+- **Category-based Design**: Beginner, Intermediate, Advanced with different colors
 
-To learn more about developing your project with Expo, look at the following resources:
+### 2. Level System
+- **3 Level States**: 
+  - `incomplete` - Available to play
+  - `complete` - Finished, can be replayed
+  - `closed` - Locked until previous level completed
+- **Replay System**: Complete levels can be replayed without losing progress
+- **XP & Gem Rewards**: Each level provides XP and gems
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 3. User Progress Tracking
+- **XP System**: Earn XP to level up
+- **Gem Economy**: Collect and spend gems
+- **Streak System**: Daily login streaks with rewards
+- **Progress Persistence**: All progress saved in Redux store
 
-## Join the community
+## 🎨 Component Architecture
 
-Join our community of developers creating universal apps.
+### Professional Component Layer
+```
+components/
+├── index.ts              # Centralized exports
+├── Core Components/
+│   ├── ThemedText.tsx
+│   ├── ThemedView.tsx
+│   ├── Navbar.tsx
+│   └── TabNavigator.tsx
+├── Course Components/
+│   ├── CourseCard.tsx
+│   ├── CourseSection.tsx
+│   └── CourseSelectionMenu.tsx
+├── Learning Components/
+│   ├── Roadmap.tsx
+│   └── LearnHeader.tsx
+└── UI Components/
+    ├── SharedDesignSystem.tsx
+    └── ui/
+        ├── IconSymbol.tsx
+        └── TabBarBackground.tsx
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 🚀 Usage Examples
+
+### Using Redux in Components
+
+```typescript
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { selectCourse, completeCourse } from '@/store/slices/coursesSlice';
+import { completeLevel, addXP } from '@/store/slices/userSlice';
+
+function MyComponent() {
+  const dispatch = useAppDispatch();
+  const { courses } = useAppSelector(state => state.courses);
+  const { progress } = useAppSelector(state => state.user);
+
+  const handleLevelComplete = (levelId: string) => {
+    dispatch(completeLevel(levelId));
+    dispatch(addXP(100));
+  };
+
+  return (
+    // Your component JSX
+  );
+}
+```
+
+### Course Selection Menu
+
+```typescript
+import { CourseSelectionMenu } from '@/components';
+
+function App() {
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  return (
+    <>
+      <CourseCard 
+        showCourseMenu={true}
+        onPress={() => setMenuVisible(true)}
+      />
+      
+      <CourseSelectionMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onCourseSelect={(course) => {
+          console.log('Selected:', course);
+          setMenuVisible(false);
+        }}
+      />
+    </>
+  );
+}
+```
+
+## 📊 State Management
+
+### Courses Slice
+```typescript
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  level: number;
+  isCompleted: boolean;
+  isLocked: boolean;
+  xpReward: number;
+  gemReward: number;
+  category: 'beginner' | 'intermediate' | 'advanced';
+}
+```
+
+### Levels Slice
+```typescript
+interface Level {
+  id: string;
+  courseId: string;
+  levelNumber: number;
+  title: string;
+  description: string;
+  state: 'incomplete' | 'complete' | 'closed';
+  xpReward: number;
+  gemReward: number;
+  isReplayable: boolean;
+  replayCount: number;
+  maxReplays: number;
+}
+```
+
+### User Slice
+```typescript
+interface UserProgress {
+  totalXP: number;
+  currentLevel: number;
+  gems: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastLoginDate: string;
+  totalCoursesCompleted: number;
+  totalLevelsCompleted: number;
+}
+```
+
+## 🎨 Design System
+
+### Color Categories
+- **Beginner**: Light green (`#E8F5E8`)
+- **Intermediate**: Light orange (`#FFF3E0`)
+- **Advanced**: Light purple (`#F3E5F5`)
+
+### Status Colors
+- **Completed**: Green (`Colors.success`)
+- **Locked**: Gray (`Colors.gray`)
+- **Open**: Primary (`Colors.primary`)
+
+## 🔧 Development
+
+### Installation
+```bash
+npm install
+```
+
+### Running the App
+```bash
+npm start
+```
+
+### Key Dependencies
+- `@reduxjs/toolkit` - Redux state management
+- `react-redux` - React Redux bindings
+- `expo-router` - Navigation
+- `@expo/vector-icons` - Icons
+
+## 📱 Features
+
+### Course Selection
+- Beautiful course cards with category-based colors
+- Modal-based course selection menu
+- Progressive unlocking system
+- Visual status indicators
+
+### Learning Path
+- Interactive roadmap with animated buttons
+- Level state visualization
+- Progress tracking
+- Replay functionality
+
+### User Experience
+- Streak tracking with daily rewards
+- Gem economy for in-app purchases
+- XP-based leveling system
+- Professional UI/UX design
+
+## 🎯 Next Steps
+
+1. **Add Persistence**: Implement AsyncStorage for data persistence
+2. **Add Animations**: Enhance user experience with smooth transitions
+3. **Add Analytics**: Track user progress and engagement
+4. **Add Multiplayer**: Implement leaderboards and social features
+5. **Add Content**: Expand course library with more trading topics
+
+## 🤝 Contributing
+
+This project follows a professional component architecture with:
+- Clear separation of concerns
+- TypeScript for type safety
+- Redux for predictable state management
+- Modular component design
+- Comprehensive documentation 

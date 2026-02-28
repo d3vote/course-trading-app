@@ -1,31 +1,14 @@
 import React from 'react';
-import { StyleSheet, ScrollView, Alert, View } from 'react-native';
+import { StyleSheet, Alert, View, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { CourseSection } from '@/components/CourseSection';
 import { Roadmap } from '@/components/Roadmap';
 import { CourseCard } from '@/components/CourseCard';
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useAppSelector } from '@/store/hooks';
 
 // Mock data for demonstration
-const mockUser = {
-  username: 'Trader',
-  currentLevel: 3,
-  totalXp: 1250,
-  streak: 7,
-  gems: 450,
-};
-
-const mockCurrentCourse = {
-  title: 'Section 1, Unit 1',
-  description: 'The Basics of Trading',
-  progress: 65,
-  totalLessons: 20,
-  completedLessons: 13,
-};
-
 const mockRoadmapLevels = [
   { id: 1, title: 'Basics', isCompleted: true, isCurrent: false, isLocked: false, xp: 100, icon: 'book' },
   { id: 2, title: 'Charts', isCompleted: true, isCurrent: false, isLocked: false, xp: 150, icon: 'bar-chart' },
@@ -59,11 +42,7 @@ const mockAvailableCourses = [
   },
 ];
 
-interface LearnScreenProps {
-  onNavigate?: (screenName: string) => void;
-}
-
-export default function LearnScreen({ onNavigate }: LearnScreenProps) {
+export default function LearnScreen() {
   const { courses, selectedCourseId } = useAppSelector((state: any) => state.courses);
   const { levels } = useAppSelector((state: any) => state.levels);
   const { progress } = useAppSelector((state: any) => state.user);
@@ -79,9 +58,10 @@ export default function LearnScreen({ onNavigate }: LearnScreenProps) {
 
   const handleContinueCourse = () => {
     console.log('Navigating to book screen...');
-    if (onNavigate) {
-      onNavigate('book');
-    }
+    router.push({
+      pathname: '/book',
+      params: { bookId: '1' }
+    });
   };
 
   const handleLevelPress = (level: any) => {
@@ -105,30 +85,42 @@ export default function LearnScreen({ onNavigate }: LearnScreenProps) {
       {/* Sticky Header Section */}
       <View style={styles.stickyHeader}>
         {/* Current Course Section */}
-        <CourseSection
-          courseTitle={currentCourse?.title || "Trading Fundamentals"}
-          courseDescription={currentCourse?.description || "Learn the basics of trading"}
-          progress={overallProgress}
-          totalLessons={totalLevels}
-          completedLessons={completedLevels}
-          onContinue={handleContinueCourse}
-          courseColor={currentCourse?.color}
-          courseShadowColor={currentCourse?.shadowColor}
-        />
+        {currentCourse && (
+          <CourseSection
+            courseTitle={currentCourse.title}
+            courseDescription={currentCourse.description}
+            progress={overallProgress}
+            totalLessons={totalLevels}
+            completedLessons={completedLevels}
+            onContinue={handleContinueCourse}
+          />
+        )}
       </View>
 
-      {/* Scrollable Learning Path */}
+      {/* Scrollable Content */}
       <ScrollView 
-        style={styles.scrollableContent} 
+        style={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContentContainer}
       >
-        <Roadmap 
-          courseId={currentCourse?.id || 'course-1'} 
-          onLevelPress={handleLevelPress}
-          courseColor={currentCourse?.color}
-          courseShadowColor={currentCourse?.shadowColor}
-        />
+        {/* Learning Path */}
+        <Roadmap courseId={currentCourse?.id || 'course-1'} onLevelPress={handleLevelPress} />
+        
+        {/* Available Courses Section */}
+        <View style={styles.coursesSection}>
+          <ThemedText style={styles.sectionTitle}>Available Courses</ThemedText>
+          {mockAvailableCourses.map((course, index) => (
+            <CourseCard
+              key={index}
+              title={course.title}
+              description={course.description}
+              level={course.level}
+              isCompleted={course.isCompleted}
+              isLocked={course.isLocked}
+              onPress={() => handleCoursePress(course)}
+            />
+          ))}
+        </View>
         
         {/* Bottom spacing */}
         <View style={styles.bottomSpacing} />
@@ -145,14 +137,26 @@ const styles = StyleSheet.create({
   stickyHeader: {
     backgroundColor: Colors.background,
     zIndex: 1,
+    paddingTop: 20,
   },
-  scrollableContent: {
+  scrollContent: {
     flex: 1,
   },
   scrollContentContainer: {
     flexGrow: 1,
+    paddingBottom: 120, // Space for navigation bar
+  },
+  coursesSection: {
+    paddingHorizontal: 20,
+    paddingTop: 40,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: 20,
   },
   bottomSpacing: {
-    height: 150, // Account for bottom navigation
+    height: 40,
   },
-});
+}); 
